@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>WebAudio Microphone to Speaker</title>
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+
+<body>
+
+  <canvas id="osci" width="700" height="400"></canvas>
+  <script src="./lib/adapter.js"> </script>
+  <script>
+      navigator.getUserMedia = navigator.getUserMedia ||
+          navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+      var constraints = {
+        audio: true,
+        video: false
+      };
+
+      function gotAudio(stream) {
+        console.log("kunam")
+        //Web Audio API
+        var audioContext = new AudioContext();
+        //Create Stream
+        var mediaStreamSource = audioContext.createMediaStreamSource(stream);
+        //volume
+        var gainNode = audioContext.createGain();
+        //delay
+        var synthDelay = audioContext.createDelay();
+
+        //analyzer, experimental --------------------------------------------
+        var analyser = audioContext.createAnalyser();
+        analyser.fftSize = 2048;
+        var bufferLength = analyser.frequencyBinCount;
+        var dataArray = new Uint8Array(bufferLength);
+        analyser.getByteTimeDomainData(dataArray);
+
+        var canvas = document.getElementById("osci");
+        var canvasCtx = canvas.getContext("2d");
+
+        function draw() {
+
+          drawVisual = requestAnimationFrame(draw);
+
+          analyser.getByteTimeDomainData(dataArray);
+
+          canvasCtx.fillStyle = 'rgb(200, 200, 200)';
+          canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+          canvasCtx.lineWidth = 2;
+          canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+
+          canvasCtx.beginPath();
+
+          var sliceWidth = canvas.width * 1.0 / bufferLength;
+          var x = 0;
+
+          for (var i = 0; i < bufferLength; i++) {
+
+            var v = dataArray[i] / 128.0;
+            var y = v * canvas.height / 2;
+
+            if (i === 0) {
+              canvasCtx.moveTo(x, y);
+            } else {
+              canvasCtx.lineTo(x, y);
+            }
+
+            x += sliceWidth;
+          }
+
+          canvasCtx.lineTo(canvas.width, canvas.height / 2);
+          canvasCtx.stroke();
+        };
+
+        //-------------------------------------------------------------------
+
+        //konek konekan node
+        mediaStreamSource.connect(gainNode);
+        gainNode.connect(synthDelay);
+        gainNode.gain.value = 4;
+        synthDelay.connect(analyser);
+        synthDelay.delayTime.value = 0;
+        analyser.connect(audioContext.destination)
+
+        draw();
+
+        //output via audioContext destination
+      }
+      function errorCallback(error) {
+        console.log('navigator.getUserMedia error: ', error);
+      }
+      navigator.getUserMedia(constraints, gotAudio, errorCallback);
+  </script>
+
+</body>
+
+</html>
