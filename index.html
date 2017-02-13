@@ -1,15 +1,16 @@
+
 <!DOCTYPE html>
 <html>
-
+<!--
+by @andirkh & doa ibu
+13 Februari 2017
+ -->
 <head>
   <title>WebAudio Microphone to Speaker</title>
-  <link rel="stylesheet" href="css/main.css" />
 </head>
 
 <body>
-
   <canvas id="osci" width="700" height="400"></canvas>
-  <script src="./lib/adapter.js"> </script>
   <script>
       navigator.getUserMedia = navigator.getUserMedia ||
           navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
@@ -92,6 +93,7 @@
       function errorCallback(error) {
         console.log('navigator.getUserMedia error: ', error);
       }
+
       navigator.getUserMedia(constraints, gotAudio, errorCallback);
   </script>
 
